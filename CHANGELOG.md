@@ -1,4 +1,4 @@
-# Change Log
+# Change Lo
 
 All notable changes to the "themer" extension will be documented in this file.
 

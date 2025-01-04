@@ -1,26 +1,49 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { systemPrompt, themeGeneratedPrompt } from './prompts';
+import { PARTICIPANT_ID } from './constants';
+import { generateTheme, classifyIntent, applyTheme } from './utils';
+import type { ThemerChatResult } from './types';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+
 export function activate(context: vscode.ExtensionContext) {
-
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "themer" is now active!');
-
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('themer.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Themer!');
-	});
-
-	context.subscriptions.push(disposable);
+	const themer = vscode.chat.createChatParticipant(PARTICIPANT_ID, handler);
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
+
+const handler: vscode.ChatRequestHandler = async (
+	request: vscode.ChatRequest,
+	context: vscode.ChatContext,
+	stream: vscode.ChatResponseStream,
+	token: vscode.CancellationToken
+): Promise<ThemerChatResult> => {
+
+	const messages = [
+		vscode.LanguageModelChatMessage.User(systemPrompt()),
+		vscode.LanguageModelChatMessage.User(request.prompt),
+	]
+
+	const intent = await classifyIntent(request);
+	if (!(['generate', 'chat'].includes(intent))) {
+		stream.markdown('Sorry, I did not understand your request.');
+		return { metadata: { command: '' } };
+	}
+
+	if (intent === 'generate') {
+		stream.progress('Generating theme...');
+		const theme = await generateTheme(request);
+		await applyTheme(theme);
+		stream.markdown('');
+
+		messages.push(
+			vscode.LanguageModelChatMessage.User(themeGeneratedPrompt(theme)),
+		)
+	}
+	
+	const response = await request.model.sendRequest(messages, {}, );
+	for await (const fragment of response.text) {
+		stream.markdown(fragment);
+	}
+	
+	return { metadata: { command: '' } };
+};

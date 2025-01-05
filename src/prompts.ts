@@ -12,24 +12,37 @@ Task:
 Instructions: 
 - Respond with only a raw, valid JSON string that represents a VS Code theme.
 - Do not include newline characters, "json" markers, or other format specifiers.
-- Use the provided schema to guide your response. 
+- Use the provided example response as a reference.
+- Ensure there is sufficient contrast between the foreground and background colors.
 
-<schema>
+<example-response>
 {
   "colors": {
     "editor.background": "#FFFFFF",
-    "editor.foreground": "#000000"
+    "editor.foreground": "#000000",
+    "sideBar.background": "#252526",
+    "sideBar.foreground": "#CCCCCC",
+    "activityBar.background": "#333333",
+    "statusBar.background": "#007ACC",
+    "titleBar.activeBackground": "#1E1E1E"
   },
   "tokenColors": [
     {
       "scope": "comment",
       "settings": {
-        "foreground": "#008000"
+        "foreground": "#008000",
+        "fontStyle": "italic"
+      }
+    },
+    {
+      "scope": "keyword",
+      "settings": {
+        "foreground": "#0000FF"
       }
     }
   ]
 }
-</schema>
+</example-response>
 `;
 }
 
